@@ -47,23 +47,18 @@ npm run dev
 
 Before you deploy, place a test order and check that it appears in the admin.
 
-## 3. Put it online (GitHub Actions → Vercel)
+## 3. Automatic checks (GitHub Actions)
 
-Every push to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
-it installs, type-checks and builds the site, and if all of that passes it deploys to Vercel.
-Pull requests get the same checks without deploying.
+Every push to `main` and every pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+it installs the packages, type-checks the code and runs a full production build. A green ✓ next to a commit
+on GitHub means the site builds; a red ✗ means something broke, and the Actions log shows what.
 
-One-time setup:
-1. Create a free account at [vercel.com](https://vercel.com) (sign in with GitHub).
-2. Create a token at **vercel.com/account/tokens** (name it `github-actions`).
-3. In GitHub, open the repository → **Settings → Secrets and variables → Actions → New repository secret**.
-   Name: `VERCEL_TOKEN`, value: the token.
-4. Push to `main`, or open **Actions → Check and deploy → Run workflow**. The first run creates a Vercel project
-   called **suffah**. The live address appears in the run summary.
-5. *(Optional)* In Vercel → project **suffah** → **Settings → Domains**, add your own domain.
-   Set `NEXT_PUBLIC_SITE_URL` under **Environment Variables** if you use a custom domain.
+## 4. Hosting (later)
 
-**Plans for a live store.** Vercel's free Hobby plan is for non-commercial use only, so a selling store needs **Vercel Pro**. Supabase pauses free projects after a week without activity, so upgrade to **Supabase Pro** when you launch.
+GitHub Actions checks and builds the site but doesn't host it, and GitHub Pages doesn't allow online stores.
+When you're ready to go live, pick a host that runs Next.js and allows commercial use, add a deploy step
+to the workflow, and set `NEXT_PUBLIC_SITE_URL` to your live address.
+Supabase pauses free projects after a week without activity, so upgrade to **Supabase Pro** when you launch.
 
 ### Optional: email alert for each new order
 
@@ -106,11 +101,12 @@ src/app/admin/(panel)/         dashboard, orders, bracelets, settings + all admi
 src/components/                shop and admin components
 src/lib/                       Supabase clients, data loading, cart, helpers
 src/middleware.ts              keeps admins signed in; protects /admin
+.github/workflows/ci.yml       GitHub Actions: type-check + build on every push
 ```
 
 ## Troubleshooting
 
-- **"Missing Supabase settings"**: `.env.local` (or the Vercel environment variables) is missing the URL or key. Restart `npm run dev` after editing it.
+- **"Missing Supabase settings"**: the URL or key in `src/lib/supabase/env.ts` is empty, or an environment variable is overriding it with a wrong value. Restart `npm run dev` after changing it.
 - **"This account doesn't have admin access"**: run the `insert into public.admins …` query from step 1.4 with that email.
 - **Photo upload fails**: make sure `schema.sql` ran fully (it creates the `product-images` bucket) and that you're signed in as an admin. Photos must be JPG, PNG, WebP, GIF or AVIF and under 5 MB.
 - **Shop shows no bracelets**: add some in the admin, or run `sample-products.sql`. Hidden bracelets don't show in the shop.
