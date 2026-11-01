@@ -1,0 +1,43 @@
+# Checks the site on every push and pull request: installs packages,
+# type-checks the code and runs a full production build.
+# A red ❌ on a commit means something is broken; the log shows what.
+# (No deployment yet — hosting will be added later.)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Type-check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Summary
+        run: echo "### Build passed :white_check_mark:" >> "$GITHUB_STEP_SUMMARY"
