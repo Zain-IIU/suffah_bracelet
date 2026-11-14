@@ -47,22 +47,28 @@ npm run dev
 
 Before you deploy, place a test order and check that it appears in the admin.
 
-## 3. Automatic checks (GitHub Actions)
+## 3. Put it online (Vercel)
 
-Every push to `main` and every pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
-it installs the packages, type-checks the code and runs a full production build. A green ✓ next to a commit
-on GitHub means the site builds; a red ✗ means something broke, and the Actions log shows what.
+Vercel builds and deploys the site straight from GitHub: every push to `main` goes live by itself, and
+every other branch or pull request gets its own preview link. [`vercel.json`](vercel.json) runs the
+site's server code in Mumbai (`bom1`), next to the Supabase database.
 
-## 4. Hosting (later)
+One-time setup:
+1. Sign in at [vercel.com](https://vercel.com) with **Continue with GitHub**.
+2. Click **Add New → Project**, pick **suffah_bracelet** and click **Import**.
+3. Leave the settings as they are (Vercel detects Next.js) and click **Deploy**. No environment variables
+   are needed: the Supabase URL and public key are already in `src/lib/supabase/env.ts`.
+4. When it finishes you get a live address like `suffah-bracelet.vercel.app`. Open it, place a test order,
+   and check it appears in `/admin`.
+5. *(Optional)* To use your own domain, go to the project → **Settings → Domains** and add it. Then add
+   `NEXT_PUBLIC_SITE_URL` (your full address, e.g. `https://suffah.pk`) under **Settings → Environment
+   Variables** and redeploy.
 
-GitHub Actions checks and builds the site but doesn't host it, and GitHub Pages doesn't allow online stores.
-When you're ready to go live, pick a host that runs Next.js and allows commercial use, add a deploy step
-to the workflow, and set `NEXT_PUBLIC_SITE_URL` to your live address.
-Supabase pauses free projects after a week without activity, so upgrade to **Supabase Pro** when you launch.
+**Plans for a live store.** Vercel's free Hobby plan is for non-commercial use only, so a selling store needs **Vercel Pro**. Supabase pauses free projects after a week without activity, so upgrade to **Supabase Pro** when you launch.
 
 ### Optional: email alert for each new order
 
-Create a free account at [resend.com](https://resend.com), verify your domain, and set `RESEND_API_KEY`, `ORDER_ALERT_EMAIL` (where alerts go, comma-separate for several) and `RESEND_FROM` (e.g. `Suffah Orders <orders@suffah.pk>`). Without these, orders still appear in the admin, which refreshes every 30 seconds.
+Create a free account at [resend.com](https://resend.com), verify your domain, and add these in Vercel → **Settings → Environment Variables**: `RESEND_API_KEY`, `ORDER_ALERT_EMAIL` (where alerts go, comma-separate for several) and `RESEND_FROM` (e.g. `Suffah Orders <orders@suffah.pk>`). Redeploy after adding them. Without these, orders still appear in the admin, which refreshes every 30 seconds.
 
 ---
 
@@ -101,7 +107,7 @@ src/app/admin/(panel)/         dashboard, orders, bracelets, settings + all admi
 src/components/                shop and admin components
 src/lib/                       Supabase clients, data loading, cart, helpers
 src/middleware.ts              keeps admins signed in; protects /admin
-.github/workflows/ci.yml       GitHub Actions: type-check + build on every push
+vercel.json                    Vercel settings (server region: Mumbai)
 ```
 
 ## Troubleshooting
