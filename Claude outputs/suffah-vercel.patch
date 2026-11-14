@@ -1,0 +1,171 @@
+From 471520150bdb31bdd398999c08b09ffe9c5dba4c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 14 Nov 2026 20:41:55 +0500
+Subject: [PATCH 1/2] Remove GitHub Actions CI
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01HSCKcBjKf5R5BhAMnXLq1f
+---
+ .github/workflows/ci.yml | 43 ----------------------------------------
+ README.md                | 14 +++----------
+ 2 files changed, 3 insertions(+), 54 deletions(-)
+ delete mode 100644 .github/workflows/ci.yml
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+deleted file mode 100644
+index ee951e1..0000000
+--- a/.github/workflows/ci.yml
++++ /dev/null
+@@ -1,43 +0,0 @@
+-# Checks the site on every push and pull request: installs packages,
+-# type-checks the code and runs a full production build.
+-# A red ❌ on a commit means something is broken; the log shows what.
+-# (No deployment yet — hosting will be added later.)
+-name: CI
+-
+-on:
+-  push:
+-    branches: [main]
+-  pull_request:
+-  workflow_dispatch:
+-
+-concurrency:
+-  group: ci-${{ github.ref }}
+-  cancel-in-progress: true
+-
+-permissions:
+-  contents: read
+-
+-jobs:
+-  check:
+-    name: Type-check and build
+-    runs-on: ubuntu-latest
+-    timeout-minutes: 15
+-    steps:
+-      - uses: actions/checkout@v5
+-
+-      - uses: actions/setup-node@v5
+-        with:
+-          node-version: 24
+-          cache: npm
+-
+-      - name: Install packages
+-        run: npm ci
+-
+-      - name: Type-check
+-        run: npx tsc --noEmit
+-
+-      - name: Build
+-        run: npm run build
+-
+-      - name: Summary
+-        run: echo "### Build passed :white_check_mark:" >> "$GITHUB_STEP_SUMMARY"
+diff --git a/README.md b/README.md
+index c09c529..a6da718 100644
+--- a/README.md
++++ b/README.md
+@@ -47,17 +47,10 @@ npm run dev
+ 
+ Before you deploy, place a test order and check that it appears in the admin.
+ 
+-## 3. Automatic checks (GitHub Actions)
++## 3. Hosting (later)
+ 
+-Every push to `main` and every pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+-it installs the packages, type-checks the code and runs a full production build. A green ✓ next to a commit
+-on GitHub means the site builds; a red ✗ means something broke, and the Actions log shows what.
+-
+-## 4. Hosting (later)
+-
+-GitHub Actions checks and builds the site but doesn't host it, and GitHub Pages doesn't allow online stores.
+-When you're ready to go live, pick a host that runs Next.js and allows commercial use, add a deploy step
+-to the workflow, and set `NEXT_PUBLIC_SITE_URL` to your live address.
++For now the store runs on your own computer. When you're ready to go live, pick a host that runs Next.js and
++allows online stores (GitHub Pages doesn't), and set `NEXT_PUBLIC_SITE_URL` to your live address.
+ Supabase pauses free projects after a week without activity, so upgrade to **Supabase Pro** when you launch.
+ 
+ ### Optional: email alert for each new order
+@@ -101,7 +94,6 @@ src/app/admin/(panel)/         dashboard, orders, bracelets, settings + all admi
+ src/components/                shop and admin components
+ src/lib/                       Supabase clients, data loading, cart, helpers
+ src/middleware.ts              keeps admins signed in; protects /admin
+-.github/workflows/ci.yml       GitHub Actions: type-check + build on every push
+ ```
+ 
+ ## Troubleshooting
+-- 
+2.43.0
+
+
+From 50a33ad14b3e002d1a1be3a69b0c56654837eeb8 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 14 Nov 2026 20:44:00 +0500
+Subject: [PATCH 2/2] Host on Vercel: Mumbai region, README setup steps
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01HSCKcBjKf5R5BhAMnXLq1f
+---
+ README.md   | 24 +++++++++++++++++++-----
+ vercel.json |  4 ++++
+ 2 files changed, 23 insertions(+), 5 deletions(-)
+ create mode 100644 vercel.json
+
+diff --git a/README.md b/README.md
+index a6da718..7ee9a13 100644
+--- a/README.md
++++ b/README.md
+@@ -47,15 +47,28 @@ npm run dev
+ 
+ Before you deploy, place a test order and check that it appears in the admin.
+ 
+-## 3. Hosting (later)
++## 3. Put it online (Vercel)
+ 
+-For now the store runs on your own computer. When you're ready to go live, pick a host that runs Next.js and
+-allows online stores (GitHub Pages doesn't), and set `NEXT_PUBLIC_SITE_URL` to your live address.
+-Supabase pauses free projects after a week without activity, so upgrade to **Supabase Pro** when you launch.
++Vercel builds and deploys the site straight from GitHub: every push to `main` goes live by itself, and
++every other branch or pull request gets its own preview link. [`vercel.json`](vercel.json) runs the
++site's server code in Mumbai (`bom1`), next to the Supabase database.
++
++One-time setup:
++1. Sign in at [vercel.com](https://vercel.com) with **Continue with GitHub**.
++2. Click **Add New → Project**, pick **suffah_bracelet** and click **Import**.
++3. Leave the settings as they are (Vercel detects Next.js) and click **Deploy**. No environment variables
++   are needed: the Supabase URL and public key are already in `src/lib/supabase/env.ts`.
++4. When it finishes you get a live address like `suffah-bracelet.vercel.app`. Open it, place a test order,
++   and check it appears in `/admin`.
++5. *(Optional)* To use your own domain, go to the project → **Settings → Domains** and add it. Then add
++   `NEXT_PUBLIC_SITE_URL` (your full address, e.g. `https://suffah.pk`) under **Settings → Environment
++   Variables** and redeploy.
++
++**Plans for a live store.** Vercel's free Hobby plan is for non-commercial use only, so a selling store needs **Vercel Pro**. Supabase pauses free projects after a week without activity, so upgrade to **Supabase Pro** when you launch.
+ 
+ ### Optional: email alert for each new order
+ 
+-Create a free account at [resend.com](https://resend.com), verify your domain, and set `RESEND_API_KEY`, `ORDER_ALERT_EMAIL` (where alerts go, comma-separate for several) and `RESEND_FROM` (e.g. `Suffah Orders <orders@suffah.pk>`). Without these, orders still appear in the admin, which refreshes every 30 seconds.
++Create a free account at [resend.com](https://resend.com), verify your domain, and add these in Vercel → **Settings → Environment Variables**: `RESEND_API_KEY`, `ORDER_ALERT_EMAIL` (where alerts go, comma-separate for several) and `RESEND_FROM` (e.g. `Suffah Orders <orders@suffah.pk>`). Redeploy after adding them. Without these, orders still appear in the admin, which refreshes every 30 seconds.
+ 
+ ---
+ 
+@@ -94,6 +107,7 @@ src/app/admin/(panel)/         dashboard, orders, bracelets, settings + all admi
+ src/components/                shop and admin components
+ src/lib/                       Supabase clients, data loading, cart, helpers
+ src/middleware.ts              keeps admins signed in; protects /admin
++vercel.json                    Vercel settings (server region: Mumbai)
+ ```
+ 
+ ## Troubleshooting
+diff --git a/vercel.json b/vercel.json
+new file mode 100644
+index 0000000..73489ff
+--- /dev/null
++++ b/vercel.json
+@@ -0,0 +1,4 @@
++{
++  "$schema": "https://openapi.vercel.sh/vercel.json",
++  "regions": ["bom1"]
++}
+-- 
+2.43.0
+
